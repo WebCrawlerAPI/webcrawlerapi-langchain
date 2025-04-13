@@ -9,7 +9,6 @@ from webcrawlerapi import WebCrawlerAPI
 
 # Configure logging
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 class WebCrawlerAPILoaderError(Exception):
     """Custom exception class for WebCrawlerAPILoader errors."""
@@ -92,7 +91,6 @@ class WebCrawlerAPILoader(BaseLoader):
         self.blacklist_regexp = blacklist_regexp
         self.max_polls = max_polls
 
-        logger.debug(f"Initializing WebCrawlerAPILoader with URL: {url}, base_url: {self.base_url}")
         self.client = WebCrawlerAPI(
             api_key=self.api_key,
             base_url=self.base_url,
@@ -109,9 +107,7 @@ class WebCrawlerAPILoader(BaseLoader):
             Document if item is valid and has content, None otherwise
         """
         try:
-            logger.debug(f"Processing job item: {item}")
             if not (item.status == "done" and item.content):
-                logger.debug(f"Skipping item - status: {item.status}, has_content: {bool(item.content)}")
                 return None
 
             doc = Document(
@@ -125,7 +121,6 @@ class WebCrawlerAPILoader(BaseLoader):
                     "cost": item.cost
                 }
             )
-            logger.debug(f"Created document from item: {item.original_url}")
             return doc
         except AttributeError as e:
             logger.error(f"Failed to create document from item: {e}")
@@ -144,11 +139,6 @@ class WebCrawlerAPILoader(BaseLoader):
         """
         logger.info(f"Starting crawl for URL: {self.url}")
         try:
-            logger.debug("Making crawl request with params: "
-                        f"scrape_type={self.scrape_type}, "
-                        f"items_limit={self.items_limit}, "
-                        f"allow_subdomains={self.allow_subdomains}")
-            
             job = self.client.crawl(
                 url=self.url,
                 scrape_type=self.scrape_type,
@@ -158,7 +148,6 @@ class WebCrawlerAPILoader(BaseLoader):
                 blacklist_regexp=self.blacklist_regexp,
                 max_polls=self.max_polls
             )
-            logger.debug(f"Received crawl response: {job}")
             
         except json.JSONDecodeError as e:
             logger.error(f"JSON decode error in crawl response: {e}")
@@ -203,7 +192,6 @@ class WebCrawlerAPILoader(BaseLoader):
         """
         logger.info(f"Starting async crawl for URL: {self.url}")
         try:
-            logger.debug("Making async crawl request")
             response = self.client.crawl_async(
                 url=self.url,
                 scrape_type=self.scrape_type,
@@ -212,7 +200,6 @@ class WebCrawlerAPILoader(BaseLoader):
                 whitelist_regexp=self.whitelist_regexp,
                 blacklist_regexp=self.blacklist_regexp
             )
-            logger.debug(f"Received async crawl response: {response}")
             
         except json.JSONDecodeError as e:
             logger.error(f"JSON decode error in async crawl response: {e}")
@@ -230,9 +217,7 @@ class WebCrawlerAPILoader(BaseLoader):
 
         while polls < self.max_polls:
             try:
-                logger.debug(f"Polling job {job_id} (attempt {polls + 1}/{self.max_polls})")
                 job = self.client.get_job(job_id)
-                logger.debug(f"Received job status: {job.status}")
                 
             except json.JSONDecodeError as e:
                 logger.error(f"JSON decode error in job status response: {e}")
@@ -254,7 +239,6 @@ class WebCrawlerAPILoader(BaseLoader):
                         doc = self._create_document(item)
                         if doc:
                             processed_items.add(item.id)
-                            logger.debug(f"Yielding document for URL: {item.original_url}")
                             yield doc
                     except AttributeError as e:
                         logger.error(f"Failed to process job item: {e}")
@@ -273,7 +257,6 @@ class WebCrawlerAPILoader(BaseLoader):
             )
 
             import time
-            logger.debug(f"Waiting {delay_seconds} seconds before next poll")
             time.sleep(delay_seconds)
             polls += 1
 
