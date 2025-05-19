@@ -2,10 +2,10 @@ from setuptools import setup, find_packages
 
 setup(
     name="webcrawlerapi-langchain",
-    version="0.1.0",
+    version="0.1.1",
     packages=find_packages(),
     install_requires=[
-        "webcrawlerapi==1.0.6",
+        "webcrawlerapi>=1.0.8",
         "langchain-core>=0.1.0",
     ],
     author="WebCrawlerAPI",
